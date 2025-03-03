@@ -1,340 +1,171 @@
-// Gadget Store Management System
+// Contact Book Management System
 
 // Required Libraries
-
-// iostream: Provides input/output stream functionality (cin, cout) for user interaction
 #include <iostream>
-
-// iomanip: Provides tools for formatting output (setw, setprecision) for table display
 #include <iomanip>
-
-// string: Provides string class and related functions for text manipulation
 #include <string>
-
-// map: Provides map container to store gadgets organized by categories
 #include <map>
-
-// vector: Provides dynamic array functionality for storing lists of gadgets
 #include <vector>
-
-// random: Provides random number generation for creating unique serial numbers
-#include <random>
-
-// algorithm: Provides algorithms like transform() for string manipulation
 #include <algorithm>
-
-// cctype: Provides character handling functions (toupper) for case conversion
 #include <cctype>
-
-// sstream: Provides stringstream for formatting strings
 #include <sstream>
-
-// optional: Provides optional class for handling optional values
 #include <optional>
-
-// functional: Provides std::function for function objects
 #include <functional>
+#include <regex>
 
 // Forward declarations
 class InputValidator;
 
 /*
- * Gadget Class: Represents a single gadget item in the store
- * Contains all properties of a gadget and methods to access/modify them
+ * Contact Class: Represents a single contact in the address book
  */
-class Gadget {
+class Contact {
 private:
-    std::string model;          // Name/model of the gadget
-    std::string category;       // Category (phone, laptop, etc.)
-    std::string serialNumber;   // Unique identifier
-    std::string brand;          // Manufacturer/brand name
-    double price;              // Price in currency
-    std::string color;         // Color of the gadget
-    int stockQuantity;         // Available quantity in stock
+    std::string name;           // Full name of the contact
+    std::string phoneNumber;    // Phone number
+    std::string email;          // Email address
+    std::string address;        // Physical address
+    std::string birthdate;      // Birthdate
 
 public:
     // Default constructor
-    Gadget() = default;
+    Contact() = default;
 
-    // Constructor with all gadget properties
-    Gadget(const std::string& model, const std::string& category, 
-           const std::string& serialNumber, const std::string& brand,
-           double price, const std::string& color, int stockQuantity)
-        : model(model), category(category), serialNumber(serialNumber),
-          brand(brand), price(price), color(color), stockQuantity(stockQuantity) {}
+    // Constructor with all contact properties
+    Contact(const std::string& name, const std::string& phoneNumber, 
+           const std::string& email, const std::string& address,
+           const std::string& birthdate)
+        : name(name), phoneNumber(phoneNumber), email(email),
+          address(address), birthdate(birthdate) {}
 
-    // Getter methods: Return the respective property values
-    std::string getModel() const { return model; }
-    std::string getCategory() const { return category; }
-    std::string getSerialNumber() const { return serialNumber; }
-    std::string getBrand() const { return brand; }
-    double getPrice() const { return price; }
-    std::string getColor() const { return color; }
-    int getStockQuantity() const { return stockQuantity; }
+    // Getter methods
+    std::string getName() const { return name; }
+    std::string getPhoneNumber() const { return phoneNumber; }
+    std::string getEmail() const { return email; }
+    std::string getAddress() const { return address; }
+    std::string getBirthdate() const { return birthdate; }
 
-    // Setter methods: Update the respective property values
-    void setModel(const std::string& model) { this->model = model; }
-    void setCategory(const std::string& category) { this->category = category; }
-    void setSerialNumber(const std::string& serialNumber) { this->serialNumber = serialNumber; }
-    void setBrand(const std::string& brand) { this->brand = brand; }
-    void setPrice(double price) { this->price = price; }
-    void setColor(const std::string& color) { this->color = color; }
-    void setStockQuantity(int quantity) { this->stockQuantity = quantity; }
+    // Setter methods
+    void setName(const std::string& name) { this->name = name; }
+    void setPhoneNumber(const std::string& phoneNumber) { this->phoneNumber = phoneNumber; }
+    void setEmail(const std::string& email) { this->email = email; }
+    void setAddress(const std::string& address) { this->address = address; }
+    void setBirthdate(const std::string& birthdate) { this->birthdate = birthdate; }
 };
 
 // Error messages class for centralized message management
 class ErrorMessages {
 public:
-    static std::string modelLength(size_t maxLength) {
-        return "Model must be between 2 and " + 
+    static std::string nameLength(size_t maxLength) {
+        return "Name must be between 2 and " + 
                std::to_string(maxLength) + " characters.";
     }
     
-    static std::string modelFormat() {
-        return "Model cannot be purely numeric and must contain letters.";
+    static std::string nameFormat() {
+        return "Name must contain only letters and spaces.";
     }
     
-    static std::string brandLength(size_t maxLength) {
-        return "Brand must be between 2 and " + 
+    static std::string phoneFormat() {
+        return "Phone number must be 11 digits starting with '09' (e.g., 09244561530)";
+    }
+    
+    static std::string emailFormat() {
+        return "Invalid email format. Example: user@domain.com";
+    }
+    
+    static std::string birthdateFormat() {
+        return "Birthdate must be in format: DD/MM/YYYY";
+    }
+    
+    static std::string addressLength(size_t maxLength) {
+        return "Address must be between 5 and " + 
                std::to_string(maxLength) + " characters.";
-    }
-    
-    static std::string brandFormat() {
-        return "Brand must contain letters, and may include numbers, spaces, hyphens, or dots.";
-    }
-    
-    static std::string categoryFormat() {
-        return "Category must contain only letters and spaces.";
-    }
-    
-    static std::string categoryLength(size_t maxLength) {
-        return "Category must be between 1 and " + 
-               std::to_string(maxLength) + " characters.";
-    }
-    
-    static std::string invalidColor() {
-        return "Invalid color! Please choose from the list above.";
-    }
-    
-    template<typename T>
-    static std::string numericRange(std::string field, T min, T max) {
-        // Remove trailing whitespace and colon
-        size_t endPos = field.find_last_not_of(": ");
-        if (endPos != std::string::npos) {
-            field = field.substr(0, endPos + 1);
-        }
-        return field + " must be between " + std::to_string(min) + " and " + std::to_string(max) + ".";
-    }
-    
-    static std::string invalidNumber() {
-        return "Invalid number format. Please enter a valid number.";
     }
 };
 
 // Input validation class
 class InputValidator {
 public:
-    static constexpr size_t MAX_TEXT_LENGTH = 50;
-    static constexpr double MAX_PRICE = 999999.99;
-    static constexpr int MAX_QUANTITY = 9999;
-    static constexpr size_t MIN_MODEL_LENGTH = 2;
-    static constexpr size_t MIN_BRAND_LENGTH = 2;
+    static constexpr size_t MAX_TEXT_LENGTH = 100;
+    static constexpr size_t MIN_NAME_LENGTH = 2;
+    static constexpr size_t MIN_ADDRESS_LENGTH = 5;
 
-    // Predefined list of valid colors
-    static const inline std::vector<std::string> validColors = {
-        "Red", "Blue", "Green", "Yellow", "Black", "White", "Purple", "Orange",
-        "Pink", "Brown", "Gray", "Silver", "Gold", "Navy", "Teal", "Maroon",
-        "Violet", "Magenta", "Cyan", "Turquoise", "Indigo", "Crimson", "Beige",
-        "Ivory", "Olive", "Coral", "Burgundy", "Lavender", "Plum", "Khaki"
-    };
-
-    // Check if string is purely numeric
-    static bool isPurelyNumeric(const std::string& str) {
-        return !str.empty() && std::all_of(str.begin(), str.end(), 
-            [](char c) { return std::isdigit(c); });
-    }
-
-    // Validate text that should contain only letters
-    static bool isLettersOnly(const std::string& text, size_t minLength = 1) {
-        if (text.length() < minLength || text.length() > MAX_TEXT_LENGTH) return false;
-        return std::all_of(text.begin(), text.end(), 
+    // Validate name (letters and spaces only)
+    static bool isValidName(const std::string& name) {
+        if (name.length() < MIN_NAME_LENGTH || name.length() > MAX_TEXT_LENGTH) return false;
+        return std::all_of(name.begin(), name.end(), 
             [](char c) { return std::isalpha(c) || std::isspace(c); });
     }
 
-    // Validate text that can contain letters and numbers
-    static bool isAlphanumeric(const std::string& text, size_t minLength = 1) {
-        if (text.length() < minLength || text.length() > MAX_TEXT_LENGTH) return false;
-        return std::all_of(text.begin(), text.end(), 
-            [](char c) { return std::isalnum(c) || std::isspace(c) || c == '-' || c == '.'; });
+    // Validate phone number format (Philippine format)
+    static bool isValidPhoneNumber(const std::string& phone) {
+        // Check if it's exactly 11 digits and starts with '09'
+        if (phone.length() != 11 || phone.substr(0, 2) != "09") return false;
+        return std::all_of(phone.begin(), phone.end(), ::isdigit);
     }
 
-    // Template function for numeric input validation
-    template<typename T>
-    static bool isValidNumber(const T& value, T minValue, T maxValue) {
-        return value >= minValue && value <= maxValue;
-    }
-
-    // Validate model (alphanumeric, not purely numeric)
-    static bool isValidModel(const std::string& model) {
-        if (model.length() < MIN_MODEL_LENGTH || model.length() > MAX_TEXT_LENGTH) return false;
-        if (isPurelyNumeric(model)) return false;
-        return isAlphanumeric(model);
-    }
-
-    // Validate category (letters only)
-    static bool isValidCategory(const std::string& category) {
-        return isLettersOnly(category);
-    }
-
-    // Validate brand (alphanumeric with special chars)
-    static bool isValidBrand(const std::string& brand) {
-        if (brand.length() < MIN_BRAND_LENGTH || brand.length() > MAX_TEXT_LENGTH) return false;
-        return isAlphanumeric(brand);
-    }
-
-    // Normalize text to title case
-    static std::string toTitleCase(std::string text) {
-        if (text.empty()) return text;
+    // Format phone number for display (convert 09XXXXXXXXX to +63 (XXX) XXX XXXX)
+    static std::string formatPhoneNumber(const std::string& phone) {
+        if (phone.length() != 11 || phone.substr(0, 2) != "09") return phone;
         
-        // Convert first character to uppercase
-        text[0] = std::toupper(text[0]);
+        std::string areaCode = phone.substr(2, 3);
+        std::string firstPart = phone.substr(5, 3);
+        std::string secondPart = phone.substr(8, 4);
         
-        // Convert rest to lowercase
-        for (size_t i = 1; i < text.length(); ++i) {
-            text[i] = std::tolower(text[i]);
-            // Capitalize letter after space
-            if (i > 0 && text[i-1] == ' ') {
-                text[i] = std::toupper(text[i]);
-            }
-        }
-        return text;
+        return "+63 (" + areaCode + ") " + firstPart + " " + secondPart;
     }
 
-    // Validate color against predefined list
-    static bool isValidColor(const std::string& color) {
-        std::string lowerColor = color;
-        std::transform(lowerColor.begin(), lowerColor.end(), lowerColor.begin(), ::tolower);
-        
-        // Convert valid colors to lowercase for comparison
-        std::vector<std::string> lowerValidColors;
-        std::transform(validColors.begin(), validColors.end(), 
-                      std::back_inserter(lowerValidColors),
-                      [](const std::string& s) {
-                          std::string lower = s;
-                          std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-                          return lower;
-                      });
-        
-        return std::find(lowerValidColors.begin(), lowerValidColors.end(), lowerColor) 
-               != lowerValidColors.end();
+    // Validate email format
+    static bool isValidEmail(const std::string& email) {
+        std::regex emailPattern(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
+        return std::regex_match(email, emailPattern);
     }
 
-    // Get valid color input
-    static std::string getValidColorInput(const std::string& prompt) {
-        displayValidColors();
+    // Validate birthdate format (DD/MM/YYYY)
+    static bool isValidBirthdate(const std::string& date) {
+        std::regex datePattern(R"((\d{2})/(\d{2})/(\d{4}))");
+        if (!std::regex_match(date, datePattern)) return false;
+        
+        int day = std::stoi(date.substr(0, 2));
+        int month = std::stoi(date.substr(3, 2));
+        int year = std::stoi(date.substr(6, 4));
+        
+        if (month < 1 || month > 12) return false;
+        if (day < 1 || day > 31) return false;
+        if (year < 1900 || year > 2025) return false;
+        
+        return true;
+    }
+
+    // Validate address length
+    static bool isValidAddress(const std::string& address) {
+        return address.length() >= MIN_ADDRESS_LENGTH && address.length() <= MAX_TEXT_LENGTH;
+    }
+
+    // Template for getting valid input with custom validation
+    template<typename Validator>
+    static std::string getValidInput(
+        const std::string& prompt,
+        Validator validator,
+        const std::string& errorMsg
+    ) {
         std::string input;
         while (true) {
             std::cout << prompt;
             std::getline(std::cin, input);
-            if (input.empty()) return input;
-            
-            std::string lowerInput = input;
-            std::transform(lowerInput.begin(), lowerInput.end(), lowerInput.begin(), ::tolower);
-            
-            // Find matching color (case-insensitive)
-            auto it = std::find_if(validColors.begin(), validColors.end(),
-                [&lowerInput](const std::string& validColor) {
-                    std::string lowerValid = validColor;
-                    std::transform(lowerValid.begin(), lowerValid.end(), 
-                                 lowerValid.begin(), ::tolower);
-                    return lowerValid == lowerInput;
-                });
-                
-            if (it != validColors.end()) {
-                return *it;  // Return the original case from validColors
-            }
-            std::cout << ErrorMessages::invalidColor() << "\n";
-        }
-    }
-
-    // Validate price
-    static bool isValidPrice(double price) {
-        return isValidNumber(price, 0.0, MAX_PRICE);
-    }
-
-    // Validate quantity
-    static bool isValidQuantity(int quantity) {
-        return isValidNumber(quantity, 0, MAX_QUANTITY);
-    }
-
-    // Get valid input with retry mechanism
-    static std::string getValidInput(const std::string& prompt, 
-                                   const std::function<bool(const std::string&)>& validator,
-                                   const std::string& errorMessage) {
-        std::string input;
-        while (true) {
-            std::cout << prompt;
-            std::getline(std::cin, input);
-            if (input.empty() || validator(input)) break;
-            std::cout << errorMessage << "\n";
+            if (validator(input)) break;
+            std::cout << "\nError: " << errorMsg << "\n\n";
         }
         return input;
-    }
-
-    // Get valid numeric input
-    template<typename T>
-    static std::optional<T> getValidNumericInput(const std::string& prompt, T minValue, T maxValue) {
-        while (true) {
-            std::cout << prompt;
-            std::string input;
-            std::getline(std::cin, input);
-            if (input.empty()) return std::nullopt;
-            
-            try {
-                T value;
-                if constexpr (std::is_same_v<T, int>) {
-                    value = std::stoi(input);
-                } else if constexpr (std::is_same_v<T, double>) {
-                    value = std::stod(input);
-                }
-                if (isValidNumber(value, minValue, maxValue)) return value;
-                std::cout << ErrorMessages::numericRange(prompt, minValue, maxValue) << "\n";
-            } catch (...) {
-                std::cout << ErrorMessages::invalidNumber() << "\n";
-            }
-        }
-    }
-
-    // Format price with 2 decimal places
-    static std::string formatPrice(double price) {
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(2) << price;
-        return ss.str();
-    }
-
-    // Display available colors
-    static void displayValidColors() {
-        std::cout << "Available colors:\n";
-        int count = 0;
-        for (const auto& color : validColors) {
-            std::cout << std::setw(12) << std::left << color;
-            if (++count % 5 == 0) std::cout << "\n";
-        }
-        if (count % 5 != 0) std::cout << "\n";
     }
 };
 
 /*
- * GadgetStore Class: Manages the entire gadget store operations
- * Handles all CRUD operations and user interface
+ * ContactBook Class: Manages the entire contact book operations
  */
-class GadgetStore {
+class ContactBook {
 private:
-    // Store gadgets organized by category
-    std::map<std::string, std::vector<Gadget>> gadgetsByCategory;
-    
-    // Serial number tracking
-    std::map<std::string, int> categoryCounters;
+    std::vector<Contact> contacts;
 
     // Helper function to get input
     std::string getInput(const std::string& prompt) const {
@@ -368,128 +199,113 @@ private:
         std::cout << std::string(50, '=') << '\n';
     }
 
-    // Generate structured serial number
-    std::string generateSerialNumber(const std::string& category) {
-        // Initialize counter for new category
-        if (categoryCounters.find(category) == categoryCounters.end()) {
-            categoryCounters[category] = 0;
+    struct ColumnWidths {
+        size_t nameWidth = 4;      // "NAME"
+        size_t phoneWidth = 5;     // "PHONE"
+        size_t emailWidth = 5;     // "EMAIL"
+        size_t addressWidth = 7;   // "ADDRESS"
+        size_t birthdateWidth = 9; // "BIRTHDATE"
+        
+        // Add minimum padding to each column
+        static constexpr size_t MIN_PADDING = 4; // 2 spaces on each side
+        
+        void updateWidths(const Contact& contact) {
+            nameWidth = std::max(nameWidth, contact.getName().length() + MIN_PADDING);
+            // Phone number will always be in format "+63 (XXX) XXX XXXX"
+            phoneWidth = std::max(phoneWidth, size_t(20) + MIN_PADDING);
+            emailWidth = std::max(emailWidth, contact.getEmail().length() + MIN_PADDING);
+            addressWidth = std::max(addressWidth, contact.getAddress().length() + MIN_PADDING);
+            birthdateWidth = std::max(birthdateWidth, contact.getBirthdate().length() + MIN_PADDING);
         }
         
-        // Increment counter
-        int counter = ++categoryCounters[category];
-        
-        // Get first two letters of category (or pad with 'X')
-        std::string prefix = toUpper(category.substr(0, 2));
-        if (prefix.length() < 2) prefix.append(2 - prefix.length(), 'X');
-        
-        // Format: CCYYNNNNN (CC=Category, YY=Year, NNNNN=Sequential)
-        std::time_t now = std::time(nullptr);
-        std::tm* ltm = std::localtime(&now);
-        
-        std::stringstream ss;
-        ss << prefix
-           << std::setfill('0') << std::setw(2) << (ltm->tm_year + 1900) % 100
-           << std::setfill('0') << std::setw(5) << counter;
-           
-        return ss.str();
-    }
-
-    // Validate category (should not be empty or purely numeric)
-    bool isValidCategory(const std::string& category) const {
-        return !category.empty() && !std::all_of(category.begin(), category.end(), 
-            [](char c) { return std::isdigit(c); });
-    }
-
-    // Displays gadgets in a formatted table
-    void displayGadgetTable(const std::vector<Gadget>& gadgets) const {
-        std::cout << std::string(100, '-') << '\n';
-        std::cout << std::left 
-                  << std::setw(8) << "SERIAL#" << " | "
-                  << std::setw(15) << "BRAND" << " | "
-                  << std::setw(15) << "MODEL" << " | "
-                  << std::setw(10) << "CATEGORY" << " | "
-                  << std::setw(8) << "PRICE" << " | "
-                  << std::setw(10) << "COLOR" << " | "
-                  << std::setw(5) << "STOCK" << '\n';
-        std::cout << std::string(100, '-') << '\n';
-
-        for (const auto& gadget : gadgets) {
-            std::cout << std::left
-                      << std::setw(8) << toUpper(gadget.getSerialNumber()) << " | "
-                      << std::setw(15) << toUpper(gadget.getBrand()) << " | "
-                      << std::setw(15) << toUpper(gadget.getModel()) << " | "
-                      << std::setw(10) << toUpper(gadget.getCategory()) << " | "
-                      << std::setw(8) << std::fixed << std::setprecision(2) << gadget.getPrice() << " | "
-                      << std::setw(10) << toUpper(gadget.getColor()) << " | "
-                      << std::setw(5) << gadget.getStockQuantity() << '\n';
+        size_t getTotalWidth() const {
+            // Add 3 for each " | " separator and 2 for the outer borders
+            return nameWidth + phoneWidth + emailWidth + addressWidth + birthdateWidth + (4 * 3) + 2;
         }
-        std::cout << std::string(100, '-') << '\n';
+    };
+
+    // Displays contacts in a formatted table
+    void displayContactTable(const std::vector<Contact>& contacts) const {
+        // Calculate required column widths
+        ColumnWidths widths;
+        for (const auto& contact : contacts) {
+            widths.updateWidths(contact);
+        }
+        
+        // Create the separator line
+        std::string separator(widths.getTotalWidth(), '-');
+        
+        // Display header
+        std::cout << separator << '\n';
+        std::cout << "| " << std::left
+                  << std::setw(widths.nameWidth) << "NAME" << " | "
+                  << std::setw(widths.phoneWidth) << "PHONE" << " | "
+                  << std::setw(widths.emailWidth) << "EMAIL" << " | "
+                  << std::setw(widths.addressWidth) << "ADDRESS" << " | "
+                  << std::setw(widths.birthdateWidth) << "BIRTHDATE" << " |\n";
+        std::cout << separator << '\n';
+
+        // Display contacts
+        for (const auto& contact : contacts) {
+            std::cout << "| " << std::left
+                      << std::setw(widths.nameWidth) << contact.getName() << " | "
+                      << std::setw(widths.phoneWidth) << InputValidator::formatPhoneNumber(contact.getPhoneNumber()) << " | "
+                      << std::setw(widths.emailWidth) << contact.getEmail() << " | "
+                      << std::setw(widths.addressWidth) << contact.getAddress() << " | "
+                      << std::setw(widths.birthdateWidth) << contact.getBirthdate() << " |\n";
+        }
+        std::cout << separator << '\n';
     }
 
 public:
-    // Initialize random number generator
-    GadgetStore() {}
-
-    // Add new gadget to the store with user input
-    void addGadget() {
-        displayHeader("ADD NEW GADGET");
+    // Add new contact
+    void addContact() {
+        displayHeader("ADD NEW CONTACT");
         
-        // Get model
-        std::string model = InputValidator::getValidInput(
-            "Enter gadget model: ",
-            InputValidator::isValidModel,
-            ErrorMessages::modelLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
-            ErrorMessages::modelFormat()
+        std::string name = InputValidator::getValidInput(
+            "Enter name: ",
+            InputValidator::isValidName,
+            ErrorMessages::nameLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
+            ErrorMessages::nameFormat()
         );
 
-        // Get category
-        std::string category = InputValidator::getValidInput(
-            "Enter gadget category: ",
-            InputValidator::isValidCategory,
-            ErrorMessages::categoryFormat() + "\n" + 
-            ErrorMessages::categoryLength(InputValidator::MAX_TEXT_LENGTH)
+        std::string phone = InputValidator::getValidInput(
+            "Enter phone number (11 digits starting with '09'): ",
+            InputValidator::isValidPhoneNumber,
+            ErrorMessages::phoneFormat()
         );
 
-        // Get brand
-        std::string brand = InputValidator::getValidInput(
-            "Enter brand name: ",
-            InputValidator::isValidBrand,
-            ErrorMessages::brandLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
-            ErrorMessages::brandFormat()
+        std::string email = InputValidator::getValidInput(
+            "Enter email: ",
+            InputValidator::isValidEmail,
+            ErrorMessages::emailFormat()
         );
-        
-        // Get price
-        double price = 0.0;
-        auto priceInput = InputValidator::getValidNumericInput(
-            "Enter price: ", 0.0, InputValidator::MAX_PRICE
-        );
-        if (priceInput) price = *priceInput;
-        
-        // Get color
-        std::string color = InputValidator::getValidColorInput("Enter color: ");
-        
-        // Get quantity
-        int quantity = 0;
-        auto quantityInput = InputValidator::getValidNumericInput(
-            "Enter stock quantity: ", 0, InputValidator::MAX_QUANTITY
-        );
-        if (quantityInput) quantity = *quantityInput;
 
-        std::string serialNumber = generateSerialNumber(category);
-        Gadget gadget(model, category, serialNumber, brand, price, color, quantity);
-        gadgetsByCategory[category].push_back(gadget);
+        std::string address = InputValidator::getValidInput(
+            "Enter address: ",
+            InputValidator::isValidAddress,
+            ErrorMessages::addressLength(InputValidator::MAX_TEXT_LENGTH)
+        );
+
+        std::string birthdate = InputValidator::getValidInput(
+            "Enter birthdate (DD/MM/YYYY): ",
+            InputValidator::isValidBirthdate,
+            ErrorMessages::birthdateFormat()
+        );
+
+        Contact contact(name, phone, email, address, birthdate);
+        contacts.push_back(contact);
         
-        std::cout << "\nGadget added successfully!\n";
-        std::cout << "Generated Serial Number: " << serialNumber << "\n";
+        std::cout << "\nContact added successfully!\n";
         std::cout << "\nPress Enter to continue...";
         std::cin.get();
     }
 
-    // Search for gadgets by category, brand, or model
-    void searchGadget() const {
-        displayHeader("SEARCH GADGET");
+    // Search for contacts (recursive matching)
+    void searchContact() const {
+        displayHeader("SEARCH CONTACT");
         
-        std::string searchTerm = toUpper(getInput("Enter search term (brand/model/category): "));
+        std::string searchTerm = toUpper(getInput("Enter search term: "));
         if (searchTerm.empty()) {
             std::cout << "\nSearch term cannot be empty!\n";
             std::cout << "\nPress Enter to continue...";
@@ -497,106 +313,63 @@ public:
             return;
         }
 
-        std::vector<Gadget> results;
+        std::vector<Contact> results;
         
-        // Search in categories first
-        for (const auto& category : gadgetsByCategory) {
-            if (toUpper(category.first).find(searchTerm) != std::string::npos) {
-                std::cout << "\nFound gadgets in category '" << toUpper(category.first) << "':\n\n";
-                displayGadgetTable(category.second);
-                std::cout << "\nPress Enter to continue...";
-                std::cin.get();
-                return;
-            }
-        }
-
-        // Then search in brands
-        bool foundBrand = false;
-        for (const auto& category : gadgetsByCategory) {
-            for (const auto& gadget : category.second) {
-                if (toUpper(gadget.getBrand()).find(searchTerm) != std::string::npos) {
-                    if (!foundBrand) {
-                        std::cout << "\nFound gadgets of brand '" << toUpper(searchTerm) << "':\n\n";
-                        foundBrand = true;
-                    }
-                    results.push_back(gadget);
-                }
-            }
-        }
-
-        if (foundBrand) {
-            displayGadgetTable(results);
-            std::cout << "\nPress Enter to continue...";
-            std::cin.get();
-            return;
-        }
-
-        // Finally search in models
-        results.clear();
-        for (const auto& category : gadgetsByCategory) {
-            for (const auto& gadget : category.second) {
-                if (toUpper(gadget.getModel()).find(searchTerm) != std::string::npos) {
-                    results.push_back(gadget);
-                }
+        for (const auto& contact : contacts) {
+            // Check all fields for partial matches
+            if (toUpper(contact.getName()).find(searchTerm) != std::string::npos ||
+                toUpper(contact.getPhoneNumber()).find(searchTerm) != std::string::npos ||
+                toUpper(contact.getEmail()).find(searchTerm) != std::string::npos ||
+                toUpper(contact.getAddress()).find(searchTerm) != std::string::npos ||
+                toUpper(contact.getBirthdate()).find(searchTerm) != std::string::npos) {
+                results.push_back(contact);
             }
         }
         
         if (results.empty()) {
-            std::cout << "\nNo gadgets found matching your search.\n";
+            std::cout << "\nNo contacts found matching your search.\n";
         } else {
-            std::cout << "\nFound " << results.size() << " matching gadget(s) by model:\n\n";
-            displayGadgetTable(results);
+            std::cout << "\nFound " << results.size() << " matching contact(s):\n\n";
+            displayContactTable(results);
         }
         
         std::cout << "\nPress Enter to continue...";
         std::cin.get();
     }
 
-    // Delete a gadget using its serial number
-    bool deleteGadget() {
+    // Delete a contact
+    bool deleteContact() {
         while (true) {
-            displayHeader("DELETE GADGET");
+            displayHeader("DELETE CONTACT");
             
-            if (gadgetsByCategory.empty()) {
-                std::cout << "\nNo gadgets in store!\n";
+            if (contacts.empty()) {
+                std::cout << "\nNo contacts in address book!\n";
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
                 return false;
             }
 
-            std::cout << "\nCurrent Gadgets in Store:\n\n";
-            for (const auto& category : gadgetsByCategory) {
-                displayGadgetTable(category.second);
-                std::cout << '\n';
-            }
+            std::cout << "\nCurrent Contacts:\n\n";
+            displayContactTable(contacts);
             
-            std::string serialNumber = toUpper(getInput("\nEnter gadget serial number to delete (or 'Q' to go back): "));
+            std::string name = getInput("\nEnter contact name to delete (or 'Q' to go back): ");
             
-            if (serialNumber == "Q") {
+            if (toUpper(name) == "Q") {
                 return false;
             }
 
-            bool found = false;
-            for (auto& category : gadgetsByCategory) {
-                auto& gadgets = category.second;
-                for (auto it = gadgets.begin(); it != gadgets.end(); ++it) {
-                    if (toUpper(it->getSerialNumber()) == serialNumber) {
-                        gadgets.erase(it);
-                        
-                        // Remove the category if it's empty
-                        if (gadgets.empty()) {
-                            gadgetsByCategory.erase(category.first);
-                        }
-                        
-                        std::cout << "\nGadget deleted successfully!\n";
-                        std::cout << "\nPress Enter to continue...";
-                        std::cin.get();
-                        return true;
-                    }
-                }
+            auto it = std::find_if(contacts.begin(), contacts.end(),
+                [&name](const Contact& c) { return c.getName() == name; });
+
+            if (it != contacts.end()) {
+                contacts.erase(it);
+                std::cout << "\nContact deleted successfully!\n";
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+                return true;
             }
             
-            std::cout << "\nGadget not found!\n";
+            std::cout << "\nContact not found!\n";
             std::string retry = toUpper(getInput("Would you like to try again? (Y/N): "));
             if (retry != "Y") {
                 return false;
@@ -604,109 +377,97 @@ public:
         }
     }
 
-    // Modify existing gadget properties
-    bool modifyGadget() {
+    // Modify existing contact
+    bool modifyContact() {
         while (true) {
-            displayHeader("MODIFY GADGET");
+            displayHeader("MODIFY CONTACT");
             
-            if (gadgetsByCategory.empty()) {
-                std::cout << "\nNo gadgets in store!\n";
+            if (contacts.empty()) {
+                std::cout << "\nNo contacts in address book!\n";
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
                 return false;
             }
 
-            std::cout << "\nCurrent Gadgets in Store:\n\n";
-            for (const auto& category : gadgetsByCategory) {
-                displayGadgetTable(category.second);
-                std::cout << '\n';
-            }
+            std::cout << "\nCurrent Contacts:\n\n";
+            displayContactTable(contacts);
             
-            std::string serialNumber = toUpper(getInput("\nEnter gadget serial number to modify (or 'Q' to go back): "));
+            std::string name = getInput("\nEnter contact name to modify (or 'Q' to go back): ");
             
-            if (serialNumber == "Q") {
+            if (toUpper(name) == "Q") {
                 return false;
             }
 
-            bool found = false;
-            for (auto& category : gadgetsByCategory) {
-                auto& gadgets = category.second;
-                for (auto& gadget : gadgets) {
-                    if (toUpper(gadget.getSerialNumber()) == serialNumber) {
-                        found = true;
-                        std::cout << "\nSelected gadget details:\n";
-                        std::vector<Gadget> currentGadget = {gadget};
-                        displayGadgetTable(currentGadget);
-                        
-                        std::cout << "\nEnter new details (press Enter to keep current value):\n";
-                        
-                        std::string input;
-                        
-                        input = InputValidator::getValidInput(
-                            "Model [" + gadget.getModel() + "]: ",
-                            InputValidator::isValidModel,
-                            ErrorMessages::modelLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
-                            ErrorMessages::modelFormat()
-                        );
-                        if (!input.empty()) gadget.setModel(input);
-                        
-                        input = InputValidator::getValidInput(
-                            "Brand [" + gadget.getBrand() + "]: ",
-                            InputValidator::isValidBrand,
-                            ErrorMessages::brandLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
-                            ErrorMessages::brandFormat()
-                        );
-                        if (!input.empty()) gadget.setBrand(input);
-                        
-                        input = InputValidator::getValidColorInput(
-                            "Color [" + gadget.getColor() + "]: "
-                        );
-                        if (!input.empty()) gadget.setColor(input);
-                        
-                        auto priceInput = InputValidator::getValidNumericInput(
-                            "Price [" + InputValidator::formatPrice(gadget.getPrice()) + "]: ",
-                            0.0, InputValidator::MAX_PRICE
-                        );
-                        if (priceInput) gadget.setPrice(*priceInput);
-                        
-                        auto quantityInput = InputValidator::getValidNumericInput(
-                            "Stock Quantity [" + std::to_string(gadget.getStockQuantity()) + "]: ",
-                            0, InputValidator::MAX_QUANTITY
-                        );
-                        if (quantityInput) gadget.setStockQuantity(*quantityInput);
-                        
-                        std::cout << "\nNote: Category cannot be modified. Create a new gadget with the desired category.\n";
-                        
-                        std::cout << "\nGadget modified successfully!\n";
-                        std::cout << "\nPress Enter to continue...";
-                        std::cin.get();
-                        return true;
-                    }
-                }
+            auto it = std::find_if(contacts.begin(), contacts.end(),
+                [&name](const Contact& c) { return c.getName() == name; });
+
+            if (it != contacts.end()) {
+                std::cout << "\nSelected contact details:\n";
+                std::vector<Contact> currentContact = {*it};
+                displayContactTable(currentContact);
+                
+                std::cout << "\nEnter new details (press Enter to keep current value):\n";
+                
+                std::string input;
+                
+                input = InputValidator::getValidInput(
+                    "Name [" + it->getName() + "]: ",
+                    InputValidator::isValidName,
+                    ErrorMessages::nameLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
+                    ErrorMessages::nameFormat()
+                );
+                if (!input.empty()) it->setName(input);
+                
+                input = InputValidator::getValidInput(
+                    "Phone [" + it->getPhoneNumber() + "]: ",
+                    InputValidator::isValidPhoneNumber,
+                    ErrorMessages::phoneFormat()
+                );
+                if (!input.empty()) it->setPhoneNumber(input);
+                
+                input = InputValidator::getValidInput(
+                    "Email [" + it->getEmail() + "]: ",
+                    InputValidator::isValidEmail,
+                    ErrorMessages::emailFormat()
+                );
+                if (!input.empty()) it->setEmail(input);
+                
+                input = InputValidator::getValidInput(
+                    "Address [" + it->getAddress() + "]: ",
+                    InputValidator::isValidAddress,
+                    ErrorMessages::addressLength(InputValidator::MAX_TEXT_LENGTH)
+                );
+                if (!input.empty()) it->setAddress(input);
+                
+                input = InputValidator::getValidInput(
+                    "Birthdate [" + it->getBirthdate() + "]: ",
+                    InputValidator::isValidBirthdate,
+                    ErrorMessages::birthdateFormat()
+                );
+                if (!input.empty()) it->setBirthdate(input);
+                
+                std::cout << "\nContact modified successfully!\n";
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+                return true;
             }
             
-            if (!found) {
-                std::cout << "\nGadget not found!\n";
-                std::string retry = toUpper(getInput("Would you like to try again? (Y/N): "));
-                if (retry != "Y") {
-                    return false;
-                }
+            std::cout << "\nContact not found!\n";
+            std::string retry = toUpper(getInput("Would you like to try again? (Y/N): "));
+            if (retry != "Y") {
+                return false;
             }
         }
     }
 
-    // Display all gadgets in the store
-    void listGadgets() const {
-        displayHeader("LIST ALL GADGETS");
+    // Display all contacts
+    void listContacts() const {
+        displayHeader("LIST ALL CONTACTS");
         
-        if (gadgetsByCategory.empty()) {
-            std::cout << "\nNo gadgets in store!\n";
+        if (contacts.empty()) {
+            std::cout << "\nNo contacts in address book!\n";
         } else {
-            for (const auto& category : gadgetsByCategory) {
-                std::cout << "\nCategory: " << toUpper(category.first) << "\n\n";
-                displayGadgetTable(category.second);
-                std::cout << '\n';
-            }
+            displayContactTable(contacts);
         }
         
         std::cout << "\nPress Enter to continue...";
@@ -715,12 +476,12 @@ public:
 
     // Display main menu options
     void displayMenu() const {
-        displayHeader("GADGET STORE MANAGEMENT SYSTEM");
-        std::cout << "\n1. Add Gadget";
-        std::cout << "\n2. Search Gadget";
-        std::cout << "\n3. Delete Gadget";
-        std::cout << "\n4. Modify Gadget";
-        std::cout << "\n5. List All Gadgets";
+        displayHeader("CONTACT BOOK MANAGEMENT SYSTEM");
+        std::cout << "\n1. Add Contact";
+        std::cout << "\n2. Search Contact";
+        std::cout << "\n3. Delete Contact";
+        std::cout << "\n4. Modify Contact";
+        std::cout << "\n5. List All Contacts";
         std::cout << "\n6. Exit";
         std::cout << "\n\nEnter your choice (1-6): ";
     }
@@ -733,22 +494,22 @@ public:
             
             switch (choice[0]) {
                 case '1':
-                    addGadget();
+                    addContact();
                     break;
                 case '2':
-                    searchGadget();
+                    searchContact();
                     break;
                 case '3':
-                    deleteGadget();
+                    deleteContact();
                     break;
                 case '4':
-                    modifyGadget();
+                    modifyContact();
                     break;
                 case '5':
-                    listGadgets();
+                    listContacts();
                     break;
                 case '6':
-                    std::cout << "\nThank you for using Gadget Store Management System!\n";
+                    std::cout << "\nThank you for using Contact Book Management System!\n";
                     return;
                 default:
                     std::cout << "\nInvalid choice! Press Enter to continue...";
@@ -760,7 +521,7 @@ public:
 
 // Program entry point
 int main() {
-    GadgetStore store;
-    store.run();
+    ContactBook contactBook;
+    contactBook.run();
     return 0;
 }
