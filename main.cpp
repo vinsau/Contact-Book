@@ -108,9 +108,9 @@ public:
     static std::string formatPhoneNumber(const std::string& phone) {
         if (phone.length() != 11 || phone.substr(0, 2) != "09") return phone;
         
-        std::string areaCode = phone.substr(2, 3);
-        std::string firstPart = phone.substr(5, 3);
-        std::string secondPart = phone.substr(8, 4);
+        std::string areaCode = phone.substr(1, 3);
+        std::string firstPart = phone.substr(4, 3);
+        std::string secondPart = phone.substr(7, 4);
         
         return "+63 (" + areaCode + ") " + firstPart + " " + secondPart;
     }
