@@ -147,12 +147,14 @@ public:
     static std::string getValidInput(
         const std::string& prompt,
         Validator validator,
-        const std::string& errorMsg
+        const std::string& errorMsg,
+        bool allowEmpty = false
     ) {
         std::string input;
         while (true) {
             std::cout << prompt;
             std::getline(std::cin, input);
+            if (allowEmpty && input.empty()) break;
             if (validator(input)) break;
             std::cout << "\nError: " << errorMsg << "\n\n";
         }
@@ -414,35 +416,40 @@ public:
                     "Name [" + it->getName() + "]: ",
                     InputValidator::isValidName,
                     ErrorMessages::nameLength(InputValidator::MAX_TEXT_LENGTH) + "\n" + 
-                    ErrorMessages::nameFormat()
+                    ErrorMessages::nameFormat(),
+                    true
                 );
                 if (!input.empty()) it->setName(input);
                 
                 input = InputValidator::getValidInput(
                     "Phone [" + it->getPhoneNumber() + "]: ",
                     InputValidator::isValidPhoneNumber,
-                    ErrorMessages::phoneFormat()
+                    ErrorMessages::phoneFormat(),
+                    true
                 );
                 if (!input.empty()) it->setPhoneNumber(input);
                 
                 input = InputValidator::getValidInput(
                     "Email [" + it->getEmail() + "]: ",
                     InputValidator::isValidEmail,
-                    ErrorMessages::emailFormat()
+                    ErrorMessages::emailFormat(),
+                    true
                 );
                 if (!input.empty()) it->setEmail(input);
                 
                 input = InputValidator::getValidInput(
                     "Address [" + it->getAddress() + "]: ",
                     InputValidator::isValidAddress,
-                    ErrorMessages::addressLength(InputValidator::MAX_TEXT_LENGTH)
+                    ErrorMessages::addressLength(InputValidator::MAX_TEXT_LENGTH),
+                    true
                 );
                 if (!input.empty()) it->setAddress(input);
                 
                 input = InputValidator::getValidInput(
                     "Birthdate [" + it->getBirthdate() + "]: ",
                     InputValidator::isValidBirthdate,
-                    ErrorMessages::birthdateFormat()
+                    ErrorMessages::birthdateFormat(),
+                    true
                 );
                 if (!input.empty()) it->setBirthdate(input);
                 
