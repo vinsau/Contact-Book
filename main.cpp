@@ -12,6 +12,7 @@
 #include <optional>
 #include <functional>
 #include <regex>
+#include <fstream> // For file operations
 
 // Forward declarations
 class InputValidator;
@@ -468,15 +469,112 @@ public:
     }
 
     // Display all contacts
-    void listContacts() const {
+    void listContacts() {
         displayHeader("LIST ALL CONTACTS");
-        
+
         if (contacts.empty()) {
-            std::cout << "\nNo contacts in address book!\n";
+            std::ifstream inFile("contacts.txt");
+            if (inFile && inFile.peek() != std::ifstream::traits_type::eof()) { // Check if file exists and is not empty
+                std::cout << "\nNo contacts in the program, but contacts are available in 'contacts.txt'.\n";
+                std::cout << "\n1. Load Contacts from File";
+                std::cout << "\n2. Go Back to Main Menu";
+                std::cout << "\n\nEnter your choice (1-2): ";
+                std::string choice;
+                std::getline(std::cin, choice);
+
+                if (choice == "1") {
+                    contacts.clear();
+                    std::string name, phone, email, address, birthdate;
+                    while (std::getline(inFile, name) &&
+                           std::getline(inFile, phone) &&
+                           std::getline(inFile, email) &&
+                           std::getline(inFile, address) &&
+                           std::getline(inFile, birthdate)) {
+                        contacts.emplace_back(name, phone, email, address, birthdate);
+                    }
+                    inFile.close();
+                    std::cout << "\nContacts loaded successfully from 'contacts.txt'.\n";
+                } else {
+                    std::cout << "\nReturning to main menu...\n";
+                }
+            } else {
+                std::cout << "\nNo contacts in the program and no contacts listed in 'contacts.txt'.\n";
+            }
         } else {
             displayContactTable(contacts);
+            std::cout << "\n1. Save Contacts to File";
+            std::cout << "\n2. Go Back to Main Menu";
+            std::cout << "\n\nEnter your choice (1-2): ";
+            std::string choice;
+            std::getline(std::cin, choice);
+
+            if (choice == "1") {
+                std::ofstream outFile("contacts.txt");
+                if (!outFile) {
+                    std::cerr << "Error: Unable to open file for saving.\n";
+                } else {
+                    for (const auto& contact : contacts) {
+                        outFile << contact.getName() << '\n'
+                                << contact.getPhoneNumber() << '\n'
+                                << contact.getEmail() << '\n'
+                                << contact.getAddress() << '\n'
+                                << contact.getBirthdate() << '\n';
+                    }
+                    outFile.close();
+                    std::cout << "\nContacts saved successfully to 'contacts.txt'.\n";
+                }
+            } else {
+                std::cout << "\nReturning to main menu...\n";
+            }
         }
-        
+
+        std::cout << "\nPress Enter to continue...";
+        std::cin.get();
+    }
+
+    // Save contacts to a file
+    void saveToFile() const {
+        std::ofstream outFile("contacts.txt");
+        if (!outFile) {
+            std::cerr << "Error: Unable to open file for saving.\n";
+            return;
+        }
+
+        for (const auto& contact : contacts) {
+            outFile << contact.getName() << '\n'
+                    << contact.getPhoneNumber() << '\n'
+                    << contact.getEmail() << '\n'
+                    << contact.getAddress() << '\n'
+                    << contact.getBirthdate() << '\n';
+        }
+
+        outFile.close();
+        std::cout << "\nContacts saved successfully to 'contacts.txt'.\n";
+        std::cout << "\nPress Enter to continue...";
+        std::cin.get();
+    }
+
+    // Load contacts from a file
+    void loadFromFile() {
+        std::ifstream inFile("contacts.txt");
+        if (!inFile) {
+            std::cerr << "Error: Unable to open file for loading.\n";
+            return;
+        }
+
+        contacts.clear();
+        std::string name, phone, email, address, birthdate;
+
+        while (std::getline(inFile, name) &&
+               std::getline(inFile, phone) &&
+               std::getline(inFile, email) &&
+               std::getline(inFile, address) &&
+               std::getline(inFile, birthdate)) {
+            contacts.emplace_back(name, phone, email, address, birthdate);
+        }
+
+        inFile.close();
+        std::cout << "\nContacts loaded successfully from 'contacts.txt'.\n";
         std::cout << "\nPress Enter to continue...";
         std::cin.get();
     }
@@ -490,7 +588,7 @@ public:
         std::cout << "\n4. Modify Contact";
         std::cout << "\n5. List All Contacts";
         std::cout << "\n6. Exit";
-        std::cout << "\n\nEnter your choice (1-6): ";
+        std::cout << "\n\nEnter your choice (1-8): ";
     }
 
     // Main program loop
@@ -498,7 +596,7 @@ public:
         while (true) {
             displayMenu();
             std::string choice = getInput("");
-            
+
             switch (choice[0]) {
                 case '1':
                     addContact();
